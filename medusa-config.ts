@@ -3,15 +3,6 @@ import { loadEnv, defineConfig } from '@medusajs/framework/utils'
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
 module.exports = defineConfig({
-  admin: {
-    vite: () => {
-      return {
-        server: {
-          allowedHosts: true,
-        },
-      }
-    },
-  },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     http: {
@@ -20,18 +11,53 @@ module.exports = defineConfig({
       authCors: process.env.AUTH_CORS!,
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
-    }
+    },
+    // Supports server, worker, or shared modes for architectural scaling
+    workerMode: process.env.MEDUSA_WORKER_MODE as "shared" | "worker" | "server",
+    redisUrl: process.env.REDIS_URL,
+  },
+  admin: {
+    disable: process.env.DISABLE_MEDUSA_ADMIN === "true",
+    backendUrl: process.env.MEDUSA_BACKEND_URL,
+    vite: () => {
+      return {
+        server: {
+          allowedHosts: true,
+        },
+      }
+    },
   },
   modules: [
+    // --- Redis Production Modules ---
+    {
+      resolve: "@medusajs/medusa/cache-redis",
+      options: {
+        redisUrl: process.env.REDIS_URL,
+      },
+    },
+    {
+      resolve: "@medusajs/medusa/event-bus-redis",
+      options: {
+        redisUrl: process.env.REDIS_URL,
+      },
+    },
+    {
+      resolve: "@medusajs/medusa/workflow-engine-redis",
+      options: {
+        redis: {
+          url: process.env.REDIS_URL,
+        },
+      },
+    },
+    // --- Custom Local Modules ---
     {
       resolve: "./src/modules/product-media",
-      // ADD THIS SECTION BELOW
       options: {
         links: [
           {
             source: "ProductModuleService",
             label: "ProductCollection",
-            target: "productMedia", // This must match the name in your module's index.ts
+            target: "productMedia",
             alias: "images",
           },
         ],
@@ -39,6 +65,6 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/invoice-generator",
-    }
+    },
   ],
 })
