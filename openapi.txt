@@ -1,0 +1,1 @@
+{"type":"not_allowed","message":"A valid publishable key is required to proceed with the request"}
