@@ -1,9 +1,11 @@
 import { MedusaService } from "@medusajs/framework/utils"
-import { BigNumberValue } from "@medusajs/framework/types"
 import pdfMake from "pdfmake/build/pdfmake"
 import pdfFonts from "pdfmake/build/vfs_fonts"
 import Invoice from "./models/invoice"
 import InvoiceConfig from "./models/invoice-config"
+
+// Local type definition for BigNumberValue (since @medusajs/framework/types doesn't export it)
+type BigNumberValue = string | number | { toNumber(): number }
 
 // Register fonts for pdfmake
 try {
@@ -88,7 +90,7 @@ class InvoiceModuleService extends MedusaService({
         }
     }
 
-    private async createInvoiceContent(
+    private async generateInvoiceContent(
         params: GeneratePdfParams,
         invoice: any
     ): Promise<Record<string, any>> {
@@ -115,7 +117,7 @@ class InvoiceModuleService extends MedusaService({
         // These fields must be explicitly requested in the query
         const order = params.order
         const summary = order.summary || {}
-        
+
         // Exact mapping to Admin "Order Summary" section
         // Note: item_subtotal is the sum of items before tax/discount
         //       shipping_subtotal is the shipping cost before tax
@@ -253,14 +255,14 @@ class InvoiceModuleService extends MedusaService({
             ]))),
         ]
 
-        const invoiceId = invoice?.display_id 
+        const invoiceId = invoice?.display_id
             ? `INV-${invoice.display_id.toString().padStart(6, "0")}`
             : `ORD-${params.order.display_id || params.order.id}`
-        
-        const invoiceDate = invoice?.created_at 
+
+        const invoiceDate = invoice?.created_at
             ? new Date(invoice.created_at).toLocaleDateString()
             : new Date().toLocaleDateString()
-            
+
         const orderDate = new Date(params.order.created_at).toLocaleDateString()
 
         // return the PDF content structure
@@ -456,7 +458,7 @@ class InvoiceModuleService extends MedusaService({
 
         // Always regenerate content to ensure we have the latest order totals
         // This fixes the issue where cached PDF content has zero values
-        const pdfContent = await this.createInvoiceContent(params, invoice)
+        const pdfContent = await this.generateInvoiceContent(params, invoice)
 
         // Ensure font is properly set in the content
         // This fixes the "Font 'Helvetica' in style 'bold'" error
