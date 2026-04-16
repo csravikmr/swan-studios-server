@@ -1,3 +1,0 @@
-Testing download for invoice 01KNRR096A7NPTT22YZH9CNTJY...
-URL: http://localhost:9000/store/invoices/01KNRR096A7NPTT22YZH9CNTJY/download
-Request failed: request to http://localhost:9000/store/invoices/01KNRR096A7NPTT22YZH9CNTJY/download failed, reason: read ECONNRESET
